@@ -8,6 +8,7 @@ this script is used to push my notes to github
 import os
 import argparse
 import time
+import asyncio
 
 HOME_DIR = os.environ['HOME']
 DOCS_DIR = os.path.join(HOME_DIR, 'Documents')
@@ -36,6 +37,11 @@ class GPush(object):
         return len(self.notes_dir_list)
 
     def convert_path(self, input_path):
+        '''
+        convert input path to absolute path
+        :param input_path: relative path or absolute path
+        :return: the absolute path
+        '''
         p = os.path.abspath(input_path)
         if os.path.exists(p):
             return p
@@ -43,7 +49,10 @@ class GPush(object):
             print(f"The path <{input_path}> is invalid!")
             return False
 
-    def push(self, target_dir, comment):
+
+
+
+    async def push(self, target_dir, comment):
         target_dir = self.convert_path(target_dir)
         #determine if the dir contains .git
         if not os.path.exists(os.path.join(target_dir, '.git')):
@@ -60,16 +69,23 @@ class GPush(object):
             os.system(f'git commit -m "{comment}"')
 
             print(f'git pushing...')
-            os.system('git push origin master')
-
+            await os.system('git push origin master')
             return True
 
         except Exception as e:
             print(e)
 
     def push_all(self, comment):
+        task_list = []
         for target_dir in self.notes_dir_list:
-            self.push(target_dir, comment)
+            coroutine = self.push(target_dir, comment)
+            task = asyncio.ensure_future(coroutine)
+            task_list.append(task)
+        print(f"tasks status is {task_list}")
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.wait(task_list))
+        print(f"tasks status is {task_list}")
+        loop.close()
         return len(self.notes_dir_list)
 
 
@@ -93,3 +109,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
