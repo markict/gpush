@@ -27,9 +27,6 @@ class GPush(object):
         #convert <filter object> to <list object>
         main_dirs = list(main_dirs)
 
-        #Verify if .git exist
-
-        #codes...
 
 
         for d in main_dirs:
